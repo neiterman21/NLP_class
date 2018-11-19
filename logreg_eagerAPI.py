@@ -3,13 +3,14 @@
 import numpy as np # linear algebra
 import tensorflow as tf
 import read_data as rd
+from collections import Counter
 
 
 
 # Image Parameters
 N_CLASSES = 2 # CHANGE HERE, total number of classes
-IMG_HEIGHT = 535 # CHANGE HERE, the image height to be resized to
-IMG_WIDTH = 396 # CHANGE HERE, the image width to be resized to
+IMG_HEIGHT = 28 #535 # CHANGE HERE, the image height to be resized to
+IMG_WIDTH = 28 #396 # CHANGE HERE, the image width to be resized to
 CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
 
 
@@ -19,8 +20,8 @@ tf.set_random_seed(0)
 np.random.seed(0)
 
 # Set model weights
-W = tfe.Variable(tf.zeros([IMG_HEIGHT*IMG_WIDTH*3, 199]) , name='weights')
-b = tfe.Variable(tf.zeros([199]) , name='bias')
+W = tfe.Variable(tf.zeros([IMG_HEIGHT*IMG_WIDTH*3, 7]) , name='weights')
+b = tfe.Variable(tf.zeros([7]) , name='bias')
 
 
 def parse_function(filename , label):
@@ -29,6 +30,7 @@ def parse_function(filename , label):
     image = tf.image.convert_image_dtype(image, tf.float32)
     image = tf.image.resize_images(image, (IMG_HEIGHT, IMG_WIDTH))
     image = tf.reshape(image , [IMG_HEIGHT * IMG_WIDTH *3 ,])
+    image = tf.clip_by_value(image, 0.0, 1.0)
     return image, label
 
 def train_preprocess(image, label):
@@ -64,16 +66,25 @@ def main():
     # Parameters
     learning_rate = 0.01
     training_epochs = 22
-    batch_size = 100
-    display_step = 1
+    batch_size = 128
+    display_step = 100
 
 
-    image_list , label_list = rd.read_labeld_image_list()
+    image_list_ , label_list_ = rd.read_labeld_image_list()
+
+
+    image_list = []
+    label_list = []
+
+    for path , lable in zip(image_list_ , label_list_) :
+        if "english" in lable or "spanish" in lable or "arabic" in lable or "mandarin" in lable or "french" in lable or "russian" in lable:
+            image_list.append(path)
+            label_list.append(lable)
     label_names = list(set(label_list))
+
     numeric_labels = []
     for l in label_list :
         numeric_labels.append(label_names.index(l))
-
 
     dataset = tf.data.Dataset.from_tensor_slices((image_list ,numeric_labels ))
     dataset = dataset.shuffle(len(image_list))
@@ -85,7 +96,7 @@ def main():
 
     print(dataset)
 
-    dataset_iter = tfe.Iterator(dataset)
+
 
     # SGD Optimizer
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
@@ -98,38 +109,46 @@ def main():
 
     for epoch in range(training_epochs):
 
-        # Iterate through the dataset
-        d = dataset_iter.next()
+        dataset_iter = tfe.Iterator(dataset)
 
-        # Images
-        x_batch = d[0]
-        # Labels
-        y_batch = tf.cast(d[1], dtype=tf.int64)
+        for batch in range(int(total_batch)):
 
-        # Compute the batch loss
-        batch_loss = loss_fn(logistic_regression, x_batch, y_batch)
-        average_loss += batch_loss
-        # Compute the batch accuracy
-        batch_accuracy = accuracy_fn(logistic_regression, x_batch, y_batch)
-        average_acc += batch_accuracy
+            try:
+                # Iterate through the dataset
+                d = dataset_iter.next()
 
-        if epoch == 0:
-            # Display the initial cost, before optimizing
-            print("Initial loss= {:.9f}".format(average_loss))
+                # Images
+                x_batch = d[0]
+                # Labels
+                y_batch = tf.cast(d[1], dtype=tf.int64)
 
-        # Update the variables following gradients info
-        optimizer.apply_gradients(grad(logistic_regression, x_batch, y_batch))
+                # Compute the batch loss
+                batch_loss = loss_fn(logistic_regression, x_batch, y_batch)
+                average_loss += batch_loss
+                # Compute the batch accuracy
+                batch_accuracy = accuracy_fn(logistic_regression, x_batch, y_batch)
+                average_acc += batch_accuracy
 
-        # Display info
-        if (epoch + 1) % display_step == 0 or epoch == 0:
-            if epoch > 0:
-                average_loss /= display_step
-                average_acc /= display_step
-            print("Step:", '%04d' % (epoch + 1), " loss=",
-                  "{:.9f}".format(average_loss), " accuracy=",
-                  "{:.4f}".format(average_acc))
-            average_loss = 0.
-            average_acc = 0.
+                if batch == 0:
+                    # Display the initial cost, before optimizing
+                    print("Initial loss= {:.9f}".format(average_loss))
+
+                # Update the variables following gradients info
+                optimizer.apply_gradients(grad(logistic_regression, x_batch, y_batch))
+
+            except :
+                pass
+
+            # Display info
+            if (batch + 1) % display_step == 0 or batch == 0:
+                if batch > 0:
+                    average_loss /= display_step
+                    average_acc /= display_step
+                print("Step:", '%04d' % (batch + 1), " loss=",
+                      "{:.9f}".format(average_loss), " accuracy=",
+                      "{:.4f}".format(average_acc))
+                average_loss = 0.
+                average_acc = 0.
 
 
 if __name__ == "__main__":
