@@ -6,6 +6,7 @@ import read_data as rd
 import sklearn
 from sklearn.model_selection import train_test_split
 import cv2
+import matplotlib.pyplot as plt
 
 
 
@@ -53,7 +54,7 @@ def read_np_images(imagepath , lable):
 def main():
     # Parameters
     learning_rate = 0.01
-    training_epochs =100
+    training_epochs =1
     batch_size = 100
     display_step = 1
 
@@ -93,7 +94,7 @@ def main():
     for line , i in  zip(a, range(len(data_label_test))):
         line[data_label_test[i]] = 1
     lTe = a
-    lTe = np.array(lTr,dtype='float64')
+    lTe = np.array(lTe,dtype='float64')
 
     # Set model weights
     W = tf.Variable(tf.zeros([IMG_HEIGHT*IMG_WIDTH*3, len(label_names)]) , name='weights')
@@ -124,6 +125,7 @@ def main():
 
         # Run the initializer
         sess.run(init)
+        print("initial cost: " + str(cost))
 
         # Training cycle
         for epoch in range(training_epochs):
@@ -141,11 +143,26 @@ def main():
         # Calculate accuracy on the test set
 
         accuracy = tf.reduce_mean(tf.to_float(tf.equal(y, correct_prediction)))
-        print("accurasy: ", '{:.9f}'.format(accuracy))
-        print(i, np.mean(np.argmax(lTe, axis=1) == sess.run(pred, feed_dict={x: imTe})))
+        test_acc = sess.run(accuracy, feed_dict={x: imTe, y: lTe})
+        print("test_acc=: {:5f}".format(test_acc) )
 
 
         print("Optimization Finished!")
+
+    # loss function
+    plt.plot(cost)
+    plt.title('Cross Entropy Loss')
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
+    plt.show()
+
+    # accuracy
+    plt.plot(test_acc, 'k-', label='test accuracy')
+    plt.xlabel('epoch')
+    plt.ylabel('accuracy')
+    plt.title('Train and Test Accuracy')
+    plt.legend(loc='best')
+    plt.show()
 
 
 if __name__ == "__main__":
