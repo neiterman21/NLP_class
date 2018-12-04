@@ -12,8 +12,8 @@ from  Datakeeper import *
 
 
 
-tf.set_random_seed(2)
-np.random.seed(2)
+#tf.set_random_seed(2)
+#np.random.seed(2)
 
 
 def main():
