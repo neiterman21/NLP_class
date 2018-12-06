@@ -14,20 +14,20 @@ from termcolor import colored
 #tf.set_random_seed(2)
 #np.random.seed(2)
 
-(hidden1_size, hidden2_size, hidden3_size ) = (512, 128,32)
+(hidden1_size, hidden2_size, hidden3_size ) = (128, 64,32)
 # Store layers weight & bias
 weights = {
-    'h1': tf.Variable(tf.random_normal([IMG_HEIGHT*IMG_WIDTH*3, hidden1_size])),
-    'h2': tf.Variable(tf.random_normal([hidden1_size, hidden2_size])),
-    'h3': tf.Variable(tf.random_normal([hidden2_size, hidden3_size])),
-    'out': tf.Variable(tf.random_normal([hidden3_size, 6]))
+    'h1': tf.Variable(tf.truncated_normal([IMG_HEIGHT*IMG_WIDTH*3, hidden1_size], stddev=0.1)),
+    'h2': tf.Variable(tf.truncated_normal([hidden1_size, hidden2_size],stddev=0.1)),
+  #  'h3': tf.Variable(tf.random_normal([hidden2_size, hidden3_size])),
+    'out': tf.Variable(tf.truncated_normal([hidden2_size, 6],stddev=0.1))
 }
 
 biases = {
-    'b1': tf.Variable(tf.random_normal([hidden1_size])),
-    'b2': tf.Variable(tf.random_normal([hidden2_size])),
-    'b3': tf.Variable(tf.random_normal([hidden3_size])),
-    'out': tf.Variable(tf.random_normal([6]))
+    'b1': tf.Variable(tf.constant(0.1 , shape = [hidden1_size])),
+    'b2': tf.Variable(tf.constant(0.1 ,shape = [hidden2_size])),
+    #'b3': tf.Variable(tf.random_normal([hidden3_size])),
+    'out': tf.Variable(tf.constant(0.1 ,shape = [6]))
 }
 
 # Create model
@@ -37,16 +37,16 @@ def multilayer_perceptron(x):
     # Hidden fully connected layer with 128 neurons
     layer_2 = tf.nn.relu(tf.matmul(layer_1, weights['h2']) + biases['b2'])
     # Output fully connected layer with a neuron for each class
-    layer_3 = tf.nn.relu(tf.matmul(layer_2, weights['h3']) + biases['b3'])
+   # layer_3 = tf.nn.relu(tf.matmul(layer_2, weights['h3']) + biases['b3'])
     # Output fully connected layer with a neuron for each class
-    out_layer = tf.matmul(layer_3, weights['out']) + biases['out']
+    out_layer = tf.matmul(layer_2, weights['out']) + biases['out']
     return out_layer
 
 def main():
     # Parameters
-    learning_rate = 0.001
-    training_epochs =1000
-    batch_size = 50
+    learning_rate = 0.0001
+    training_epochs =100
+    batch_size = 96
     display_step = 1
 
 
@@ -66,7 +66,7 @@ def main():
     for l in label_list :
         numeric_labels.append(label_names.index(l))
 
-    data_image_train, data_image_test , data_label_train , data_label_test = train_test_split(image_list , numeric_labels , test_size=0.10)
+    data_image_train, data_image_test , data_label_train , data_label_test = train_test_split(image_list , numeric_labels , test_size=0.15)
 
     train_data  = DataKeeper(data_image_train,data_label_train, label_names )
     train_data.setBatchSize(batch_size)
@@ -101,8 +101,7 @@ def main():
             # Loop over all batches
             for i in range(total_batch):
                 batch_x, batch_y = train_data.getNextBatch()
-                # Run optimization op (backprop) and cost op (to get loss value)
-                _, c = sess.run([train_op, loss_op], feed_dict={x: batch_x, y_: batch_y})
+                sess.run(train_op, feed_dict={x: batch_x, y_: batch_y})
 
 
             batch_x_, batch_y_ = train_data.getNextBatch()
