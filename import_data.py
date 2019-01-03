@@ -1,14 +1,79 @@
 import glob
 import numpy as np
 import librosa
+# import matplotlib
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from librosa import display
 import tensorflow as tf
+import os
 
 
-IMAGE_WIDTH = 800
-IMAGE_HEIGHT = 600
+plt.switch_backend('Agg')
+
+# def class():
+#     WIDTH_RATIO = 5
+#     HEIGHT_RATIO = 3
+#     DPI = 96
+#     IMAGE_WIDTH = 535
+#     IMAGE_HEIGHT = 396
+#     N_CLASS = 0
+#     TRAIN_SIZE = 0
+#     TEST_SIZE = 0
+#     N_MELS = 0
+#     T_FRAMES = 0
+
+
+WIDTH_RATIO = 5
+HEIGHT_RATIO = 3
+DPI = 96
+IMAGE_WIDTH = 535
+IMAGE_HEIGHT = 396
 N_CLASS = 0
+TRAIN_SIZE = 0
+TEST_SIZE = 0
+N_MELS = 0
+T_FRAMES = 0
+
+
+def get_n_mels():
+    return N_MELS
+
+
+def get_t_frames():
+    return T_FRAMES
+
+
+def set_n_mels(nmels):
+    N_MELS = nmels
+
+
+def set_t_frames(tframes):
+    T_FRAMES = tframes
+
+
+def get_width():
+    biggest_mat = get_t_frames()*get_n_mels()
+    inches = biggest_mat/DPI
+    width_in_inch = inches/HEIGHT_RATIO
+    IMAGE_WIDTH = width_in_inch*DPI
+    return width_in_inch
+
+
+def get_height():
+    biggest_mat = get_t_frames()*get_n_mels()
+    inches = biggest_mat/DPI
+    height_in_inch = inches/WIDTH_RATIO
+    IMAGE_HEIGHT = height_in_inch*DPI
+    return height_in_inch
+
+
+def get_train_size():
+    return TRAIN_SIZE
+
+
+def get_test_size():
+    return TEST_SIZE
 
 
 def get_classes():
@@ -32,7 +97,17 @@ def mp3_to_mfcc(file):
     """
     y, sr = librosa.load(file, mono=False)
     mfccs = librosa.feature.mfcc(y=y, sr=sr)
-    return mfccs[0]
+    temp_n_mels, temp_t_frames = mfccs.shape
+
+    if temp_n_mels > get_n_mels():
+        # set_n_mels(temp_n_mels)
+        N_MELS = temp_n_mels
+
+    if temp_t_frames > get_t_frames():
+        set_t_frames(temp_t_frames)
+
+    return mfccs
+    # return mfccs[0]
 
 
 def mp3_to_spectrogram(file):
@@ -50,24 +125,62 @@ def mp3_to_spectrogram(file):
     """
     y, sr = librosa.load(file, mono=False)
     mspec = librosa.feature.melspectrogram(y=y, sr=sr)
-    return mspec[0]
+    temp_n_mels, temp_t_frames = mspec.shape
+
+    if temp_n_mels > get_n_mels():
+        set_n_mels(temp_n_mels)
+
+    if temp_t_frames > get_t_frames():
+        set_t_frames(temp_t_frames)
+
+    return mspec
+    # return mspec[0]
 
 
-def featured_data_to_image(data, out_filename):
+def featured_data_to_image(data, width, height, out_filename, mfcc):
     """
     plots the data to image and saves it as jpg file
+    1 inch = 96px
     :param data: np.ndarray of the data to be saved as a file
+    :param width: of image to save in inches
+    :param height: of image to save in inches
     :param out_filename: filename to be saved
     :return: path to jpg file
     """
-    plt.figure(figsize=(4, 3), frameon=False)
+    # width = get_width()
+    # height = get_height()
+    # plt.use
+    plt.figure(figsize=(width, height), frameon=False) # 5(in) x 3(in) = 480(px) x 288(px)
+
     plt.rcParams['savefig.pad_inches'] = 0
-    ax = librosa.display.specshow(data)
+
+    if mfcc:
+        ax = librosa.display.specshow(data)
+    else:
+        ax = librosa.display.specshow(librosa.power_to_db(data, ref=np.max))
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     plt.autoscale(tight=True)
-    plt.savefig(out_filename)
+    plt.savefig(out_filename, bbox_inches='tight', pad_inches=0)
+    print("saved image to: ", out_filename)
+    plt.clf()
+    plt.close()
     # plt.savefig(out_folder + out_filename)
+
+
+def mp3_to_jpg(filename, mfcc=True, width=480, height = 288, width_inch=5, height_inch=3, dpi=96, out_folder="jpg"):
+    if mfcc:
+        arr = mp3_to_mfcc(filename)
+    else:
+        arr = mp3_to_spectrogram(filename)
+    fn_split = filename.split("/")
+    out_path = filename.replace(fn_split[-1], out_folder)
+    if not os.path.exists(out_path):
+        os.mkdir(out_path)
+    out_path = out_path + "/" + fn_split[-1][:-4]
+    out_path = out_path + ".jpg"
+    featured_data_to_image(arr, width_inch, height_inch, out_path, mfcc)
+
 
 
 def import_image_files(path):
@@ -84,7 +197,7 @@ def import_image_files(path):
 
     temp_image_list = glob.glob(path + "*.jpg")
     ext = "*.jpg"
-    if temp_image_list.count() < 1:
+    if len(temp_image_list) < 1:
         temp_image_list = glob.glob(path + "*.png")
         ext = "*.png"
 
@@ -105,7 +218,7 @@ def import_image_files(path):
     return image_list, label_list, frequ_dict
 
 
-def get_class_number_and_key_dict(freq_dict, threshold):
+def get_class_number_and_key_dict(freq_dict, threshold = 50):
     """
     calculates the amount of classification classes based on a minimum threshold of samples per class
     and creates a dictionary with key,value corresponds to label,index
@@ -168,6 +281,9 @@ def set_train_n_test(image_list, label_list, freq_dict, key_dict, test_size = 10
                 train_images.append(image_list[_])
                 train_labels.append(label)
 
+    TEST_SIZE = len(test_labels)
+    TRAIN_SIZE = len(train_labels)
+
     return train_images, train_labels, test_images, test_labels
 
 
@@ -200,3 +316,13 @@ def parse_image(filename, label):
 #     dataset = dataset.map(parse_image)
 #
 #     return dataset
+
+
+# def main():
+#     IMAGE_WIDTH = 800
+#     IMAGE_HEIGHT = 600
+#     N_CLASS = 0
+#     TRAIN_SIZE = 0
+#     TEST_SIZE = 0
+#     N_MELS = 0
+#     T_FRAMES = 0
