@@ -30,7 +30,7 @@ def parst_data_labels(file):
 
 def read_labeld_image_list() :
     labels_raw = parst_data_labels("/home/evgeny/code_projects/NLP/dataset/speech-accent-archive/speakers_all.csv")
-    image_list = glob.glob("/home/evgeny/code_projects/NLP/dataset/speech-accent-archive/recordings/jpgfiles/" + "*.jpg")
+    image_list = glob.glob("/home/evgeny/PycharmProjects/linear_reg/NLP_class/data/melspectogram/" + "*.jpg")
     labels = []
     for image in image_list:
         image_name = image.split("/")[-1].split(".jpg")[0]

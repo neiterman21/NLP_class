@@ -8,7 +8,7 @@ import cv2
 N_CLASSES = 2 # CHANGE HERE, total number of classes
 IMG_WIDTH = 535 # CHANGE HERE, the image height to be resized to
 IMG_HEIGHT= 396 # CHANGE HERE, the image width to be resized to
-CHANNELS = 3 # The 3 color channels, change to 1 if grayscale
+CHANNELS = 1 # The 3 color channels, change to 1 if grayscale
 
 class DataKeeper():
     def __init__(self, image_paths , labels, label_names):
@@ -30,7 +30,7 @@ class DataKeeper():
         imTr = []
         lTr  = []
         for path , l in zip(imagepath , lable) :
-            im = cv2.imread(path)
+            im = cv2.imread(path , 0)
             imTr.append(cv2.resize(im, (IMG_WIDTH,IMG_HEIGHT), interpolation=cv2.INTER_CUBIC))
             lTr.append(np.float32(l))
         return   imTr ,  lTr
@@ -43,7 +43,7 @@ class DataKeeper():
         self._curent_index  += self._batch_size
         imTr ,lTr = self.read_np_images(data_image , data_label)
         imTr = np.array(imTr, dtype='float32') #as mnist
-        imTr = np.ndarray.reshape(imTr,[imTr.shape[0],imTr.shape[1]*imTr.shape[2]*imTr.shape[3]])
+        imTr = np.ndarray.reshape(imTr,[imTr.shape[0],imTr.shape[1]*imTr.shape[2]])
         a = np.zeros((len(data_label),len(self.label_names)))
         for line , i in  zip(a, range(len(data_label))):
             line[data_label[i]] = 1
