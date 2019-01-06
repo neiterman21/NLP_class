@@ -1,54 +1,85 @@
 #!/usr/local/bin python
 
-import numpy as np # linear algebra
+import numpy as np  # linear algebra
 import cv2
-
+import read_data as rd
 
 # Image Parameters
-N_CLASSES = 2 # CHANGE HERE, total number of classes
-IMG_WIDTH = 535 # CHANGE HERE, the image height to be resized to
-IMG_HEIGHT= 396 # CHANGE HERE, the image width to be resized to
-CHANNELS = 1 # The 3 color channels, change to 1 if grayscale
+N_CLASSES = 2  # CHANGE HERE, total number of classes
+IMG_WIDTH = 387  # CHANGE HERE, the image height to be resized to
+IMG_HEIGHT = 231  # CHANGE HERE, the image width to be resized to
+CHANNELS = 3  # The 3 color channels, change to 1 if grayscale
 
-class DataKeeper():
-    def __init__(self, image_paths , labels, label_names):
-        assert len(image_paths) == len(labels) , print("labels list len isn't equl to images paths len")
+
+class DataKeeper:
+    """
+    manages the dataset for:
+    batch size, getting next batch and reading image file
+    """
+
+    def __init__(self, image_paths, labels, label_names):
+        """
+        initializes all required variable for managing the dataset
+        :param image_paths: a list of images location
+        :param labels: a list of numeric value of images corresponding labels
+        :param label_names: a list of images corresponding labels
+        """
+        assert len(image_paths) == len(labels), print("labels list len isn't equl to images paths len")
         self.image_paths = image_paths
         self.labels = labels
         self.label_names = label_names
         self._batch_size = len(labels)
         self._curent_index = 0
 
-
     def setBatchSize(self, batch_size):
+        """
+        sets dataset batch size
+        :param batch_size: batch size
+        :return: sets the object batch size parameter
+        """
         self._batch_size = batch_size
 
     def getNumOfBatches(self):
+        """
+        :return: returns the number of batches per the dataset size and batch size
+
+        """
         return (int)(len(self.labels) / self._batch_size)
 
-    def read_np_images(self,imagepath , lable):
+    def read_np_images(self, imagepath, lable):
+        """
+        reads image files and converts them to a matrix (2D matrix - grayscaled image
+                                                         3D matrix for RGB colored image
+        representing pixel content of type float
+        :param imagepath: list of path to jpg files
+        :param lable: corresponding labels for images
+        :return: array of matrices holding pixel values and list of labels per image
+        """
         imTr = []
-        lTr  = []
-        for path , l in zip(imagepath , lable) :
-            im = cv2.imread(path , 0)
-            imTr.append(cv2.resize(im, (IMG_WIDTH,IMG_HEIGHT), interpolation=cv2.INTER_CUBIC))
+        lTr = []
+        for path, l in zip(imagepath, lable):
+            im = cv2.imread(path, 0)
+            imTr.append(cv2.resize(im, (IMG_WIDTH, IMG_HEIGHT), interpolation=cv2.INTER_CUBIC))
             lTr.append(np.float32(l))
-        return   imTr ,  lTr
+        return imTr, lTr
 
     def getNextBatch(self):
-        if self._curent_index +  self._batch_size > len(self.labels):
+        """
+        :return: the next batch of files as matrices of pixel values and their corresponding labels
+        """
+        if self._curent_index + self._batch_size > len(self.labels):
             self._curent_index = 0
-        data_image = self.image_paths[self._curent_index :  self._curent_index + self._batch_size]
-        data_label = self.labels[self._curent_index :  self._curent_index + self._batch_size]
-        self._curent_index  += self._batch_size
-        imTr ,lTr = self.read_np_images(data_image , data_label)
-        imTr = np.array(imTr, dtype='float32') #as mnist
-        imTr = np.ndarray.reshape(imTr,[imTr.shape[0],imTr.shape[1]*imTr.shape[2]])
-        a = np.zeros((len(data_label),len(self.label_names)))
-        for line , i in  zip(a, range(len(data_label))):
+        data_image = self.image_paths[self._curent_index:  self._curent_index + self._batch_size]
+        data_label = self.labels[self._curent_index:  self._curent_index + self._batch_size]
+        self._curent_index += self._batch_size
+        imTr, lTr = self.read_np_images(data_image, data_label)
+        imTr = np.array(imTr, dtype='float32')  # as mnist
+        imTr = np.ndarray.reshape(imTr, [imTr.shape[0], imTr.shape[1] * imTr.shape[2]])
+        a = np.zeros((len(data_label), len(self.label_names)))
+        for line, i in zip(a, range(len(data_label))):
             line[data_label[i]] = 1
         lTr = a
-        lTr = np.array(lTr,dtype='float64')
+        lTr = np.array(lTr, dtype='float64')
 
-        return imTr ,lTr
+        return imTr, lTr
 

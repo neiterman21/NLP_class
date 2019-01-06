@@ -1,18 +1,20 @@
 #!/usr/local/bin python
 
-import numpy as np # linear algebra
+import numpy as np  # linear algebra
 import tensorflow as tf
 import read_data as rd
 import sklearn
 from sklearn.model_selection import train_test_split
 import cv2
 import matplotlib.pyplot as plt
-from  Datakeeper import *
+from Datakeeper import *
 from tensorflow.contrib.boosted_trees.lib.learner import batch
 from termcolor import colored
 
-#tf.set_random_seed(2)
-#np.random.seed(2)
+"""
+Convolutional neural network model script
+contains 2 convolution layers and 1 fully connected layer
+"""
 
 # Training Parameters
 learning_rate = 0.001
@@ -20,9 +22,10 @@ num_steps = 2000
 batch_size = 32
 
 # Network Parameters
-num_input = IMG_HEIGHT*IMG_WIDTH*3
+num_input = IMG_HEIGHT * IMG_WIDTH * 3
 num_classes = 6
-dropout = 0.25 # Dropout, probability to drop a unit
+dropout = 0.25  # Dropout, probability to drop a unit
+
 
 # Create the neural network
 def conv_net(x_dict, n_classes, dropout, reuse, is_training):
@@ -57,6 +60,7 @@ def conv_net(x_dict, n_classes, dropout, reuse, is_training):
         out = tf.layers.dense(fc1, n_classes)
 
     return out
+
 
 # Define the model function (following TF Estimator Template)
 def model_fn(features, labels, mode):
@@ -99,26 +103,14 @@ def model_fn(features, labels, mode):
 
 
 def get_data():
-    image_list_ , label_list_ = rd.read_labeld_image_list()
+    image_list, label_list, label_names, numeric_labels = rd.get_image_and_label()
 
-    image_list = []
-    label_list = []
+    data_image_train, data_image_test, data_label_train, data_label_test = train_test_split(image_list, numeric_labels,
+                                                                                            test_size=0.15)
 
-    for path , lable in zip(image_list_ , label_list_) :
-        if "english" in lable or "spanish" in lable or "arabic" in lable or "mandarin" in lable or "french" in lable or "russian" in lable:
-            image_list.append(path)
-            label_list.append(lable)
-    label_names = list(set(label_list))
-
-    numeric_labels = []
-    for l in label_list :
-        numeric_labels.append(label_names.index(l))
-
-    data_image_train, data_image_test , data_label_train , data_label_test = train_test_split(image_list , numeric_labels , test_size=0.15)
-
-    train_data  = DataKeeper(data_image_train,data_label_train, label_names )
-#  train_data.setBatchSize(batch_size)
-    test_data   = DataKeeper(data_image_test,data_label_test, label_names )
+    train_data = DataKeeper(data_image_train, data_label_train, label_names)
+    #  train_data.setBatchSize(batch_size)
+    test_data = DataKeeper(data_image_test, data_label_test, label_names)
     data = {
         'test': test_data,
         'train': train_data
@@ -130,7 +122,7 @@ def get_data():
 def main():
     # Parameters
     learning_rate = 0.0001
-    training_epochs =100
+    training_epochs = 100
     batch_size = 96
     display_step = 1
 

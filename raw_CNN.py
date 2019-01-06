@@ -107,20 +107,7 @@ def RNN(x, weights, biases):
     return tf.matmul(outputs[-1], weights['out']) + biases['out']
 
 def main():
-    image_list_ , label_list_ = rd.read_labeld_image_list()
-
-    image_list = []
-    label_list = []
-
-    for path , lable in zip(image_list_ , label_list_) :
-        if "english" in lable or "spanish" in lable or "arabic" in lable or "mandarin" in lable or "french" in lable or "russian" in lable:
-            image_list.append(path)
-            label_list.append(lable)
-    label_names = list(set(label_list))
-
-    numeric_labels = []
-    for l in label_list :
-        numeric_labels.append(label_names.index(l))
+    image_list, label_list, label_names, numeric_labels = rd.get_image_and_label()
 
     data_image_train, data_image_test , data_label_train , data_label_test = train_test_split(image_list , numeric_labels , test_size=0.15)
 

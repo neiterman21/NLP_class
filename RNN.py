@@ -2,13 +2,13 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.contrib import rnn
-from  Datakeeper import *
+from Datakeeper import *
 from sklearn.model_selection import train_test_split
 import read_data as rd
 
-# Import MNIST data
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
+# # Import MNIST data
+# from tensorflow.examples.tutorials.mnist import input_data
+# mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
 '''
 To classify images using a recurrent neural network, we consider every image
@@ -23,16 +23,16 @@ batch_size = 128
 display_step = 5
 
 # Network Parameters
-num_input = IMG_HEIGHT # MNIST data input (img shape: 28*28)
-timesteps = IMG_WIDTH # timesteps
-num_hidden = 256 # hidden layer num of features
-num_classes = 6 # MNIST total classes (0-9 digits)
+num_input = IMG_HEIGHT  # MNIST data input (img shape: 28*28)
+timesteps = IMG_WIDTH  # timesteps
+num_hidden = 256  # hidden layer num of features
+num_classes = 6  # MNIST total classes (0-9 digits)
 
 # tf Graph input
 X = tf.placeholder("float", [None, timesteps, num_input])
 Y = tf.placeholder("float", [None, num_classes])
 
-# Define weights
+# Define weights and biases
 weights = {
     'out': tf.Variable(tf.random_normal([num_hidden, num_classes]))
 }
@@ -42,7 +42,6 @@ biases = {
 
 
 def RNN(x, weights, biases):
-
     # Prepare data shape to match `rnn` function requirements
     # Current data input shape: (batch_size, timesteps, n_input)
     # Required shape: 'timesteps' tensors list of shape (batch_size, n_input)
@@ -59,31 +58,22 @@ def RNN(x, weights, biases):
     # Linear activation, using rnn inner loop last output
     return tf.matmul(outputs[-1], weights['out']) + biases['out']
 
-def main():
 
+def main():
     training_epochs = 500
 
-    image_list_ , label_list_ = rd.read_labeld_image_list()
+    image_list, label_list, label_names, numeric_labels = rd.get_image_and_label()
 
-    image_list = []
-    label_list = []
+    data_image_train, data_image_test, data_label_train, data_label_test = train_test_split(image_list, numeric_labels,
+                                                                                            test_size=0.15)
 
-    for path , lable in zip(image_list_ , label_list_) :
-        if "english" in lable or "spanish" in lable or "arabic" in lable or "mandarin" in lable or "french" in lable or "russian" in lable:
-            image_list.append(path)
-            label_list.append(lable)
-    label_names = list(set(label_list))
-
-    numeric_labels = []
-    for l in label_list :
-        numeric_labels.append(label_names.index(l))
-
-    data_image_train, data_image_test , data_label_train , data_label_test = train_test_split(image_list , numeric_labels , test_size=0.15)
-
-    train_data  = DataKeeper(data_image_train,data_label_train, label_names )
+    # Creates train and test sets
+    train_data = DataKeeper(data_image_train, data_label_train, label_names)
     train_data.setBatchSize(batch_size)
-    test_data   = DataKeeper(data_image_test,data_label_test, label_names )
+    test_data = DataKeeper(data_image_test, data_label_test, label_names)
     test_data.setBatchSize(batch_size)
+
+    # Starting to construct the model
     logits = RNN(X, weights, biases)
     prediction = tf.nn.softmax(logits)
 
@@ -105,7 +95,7 @@ def main():
 
         # Run the initializer
         sess.run(init)
-        for epoc in range(1, training_epochs+1):
+        for epoc in range(1, training_epochs + 1):
             total_batch = train_data.getNumOfBatches()
             # Loop over all batches
             for i in range(total_batch):
@@ -131,8 +121,8 @@ def main():
         test_x = test_x.reshape((-1, timesteps, num_input))
 
         print("Testing Accuracy:", \
-            sess.run(accuracy, feed_dict={X: test_x, Y: test_y}))
+              sess.run(accuracy, feed_dict={X: test_x, Y: test_y}))
+
 
 if __name__ == "__main__":
     main()
-

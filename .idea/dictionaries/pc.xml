@@ -1,12 +1,14 @@
 <component name="ProjectDictionaryState">
   <dictionary name="pc">
     <words>
+      <w>convolutional</w>
       <w>dataset</w>
       <w>frequ</w>
       <w>iters</w>
       <w>mels</w>
       <w>mfcc</w>
       <w>nmels</w>
+      <w>perceptron</w>
       <w>resized</w>
       <w>tframes</w>
     </words>
