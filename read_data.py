@@ -1,6 +1,8 @@
 import glob
 import csv
 import numpy as np # linear algebra
+import os
+
 
 def parst_data_labels(file):
     csv_file = open(file,'r')
@@ -28,9 +30,11 @@ def parst_data_labels(file):
     print(f'Processed {line_count} lines.')
     return data_labels
 
+
 def read_labeld_image_list() :
-    labels_raw = parst_data_labels("/home/evgeny/code_projects/NLP/dataset/speech-accent-archive/speakers_all.csv")
-    image_list = glob.glob("/home/evgeny/PycharmProjects/linear_reg/NLP_class/data/melspectogram/" + "*.jpg")
+    path = os.getcwd()
+    labels_raw = parst_data_labels(path + "/data/speakers_all.csv")
+    image_list = glob.glob(path + "/data/melspectogram/" + "*.jpg")
     labels = []
     for image in image_list:
         image_name = image.split("/")[-1].split(".jpg")[0]

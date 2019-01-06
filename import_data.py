@@ -1,83 +1,127 @@
 import glob
 import numpy as np
 import librosa
-# import matplotlib
-# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from librosa import display
 import tensorflow as tf
 import os
+import cv2
+from PIL import Image
 
 
+plt.ioff()
 plt.switch_backend('Agg')
 
-# def class():
-#     WIDTH_RATIO = 5
-#     HEIGHT_RATIO = 3
-#     DPI = 96
-#     IMAGE_WIDTH = 535
-#     IMAGE_HEIGHT = 396
-#     N_CLASS = 0
-#     TRAIN_SIZE = 0
-#     TEST_SIZE = 0
-#     N_MELS = 0
-#     T_FRAMES = 0
 
+# WIDTH_RATIO = 5
+# HEIGHT_RATIO = 3
+# DPI = 96
+IMAGE_WIDTH = 387
+IMAGE_HEIGHT = 231
+CHANNELS = 3
+WORD_COUNT = 65
+WORD_COUNT_W_A = 68
+# N_CLASS = 0
+# TRAIN_SIZE = 0
+# TEST_SIZE = 0
+# N_MELS = 0
+# T_FRAMES = 0
+#
+#
+# def get_n_mels():
+#     return N_MELS
+#
+#
+# def get_t_frames():
+#     return T_FRAMES
+#
+#
+# def set_n_mels(nmels):
+#     N_MELS = nmels
+#
+#
+# def set_t_frames(tframes):
+#     T_FRAMES = tframes
+#
+#
+# def get_width():
+#     biggest_mat = get_t_frames()*get_n_mels()
+#     inches = biggest_mat/DPI
+#     width_in_inch = inches/HEIGHT_RATIO
+#     IMAGE_WIDTH = width_in_inch*DPI
+#     return width_in_inch
+#
+#
+# def get_height():
+#     biggest_mat = get_t_frames()*get_n_mels()
+#     inches = biggest_mat/DPI
+#     height_in_inch = inches/WIDTH_RATIO
+#     IMAGE_HEIGHT = height_in_inch*DPI
+#     return height_in_inch
+#
+#
+# def get_train_size():
+#     return TRAIN_SIZE
+#
+#
+# def get_test_size():
+#     return TEST_SIZE
+#
+#
+# def get_classes():
+#     return N_CLASS
 
-WIDTH_RATIO = 5
-HEIGHT_RATIO = 3
-DPI = 96
-IMAGE_WIDTH = 535
-IMAGE_HEIGHT = 396
-N_CLASS = 0
-TRAIN_SIZE = 0
-TEST_SIZE = 0
-N_MELS = 0
-T_FRAMES = 0
-
-
-def get_n_mels():
-    return N_MELS
-
-
-def get_t_frames():
-    return T_FRAMES
-
-
-def set_n_mels(nmels):
-    N_MELS = nmels
-
-
-def set_t_frames(tframes):
-    T_FRAMES = tframes
+#
+# class dataset:
+#     def __init__(self):
+#         self.width = IMAGE_WIDTH
+#         self.height = IMAGE_HEIGHT
+#         self.train_x_list = []
+#         self.train_y_list = []
+#         self.test_x_list = []
+#         self.test_y_list = []
+#         self.img_list = []
+#         self.label_list = []
+#         self.freq_dict = {}
+#         self.num_classes = 0
+#         self.labels_keys = {}
+#         self.n_inputs = self.width*self.height*CHANNELS
+#         self.batch_counter = 0
+#
+#     def create_train_and_test_dataset_lists(self, path_of_images):
+#         path_of_images = os.getcwd() + path_of_images
+#         # a list of images path
+#         # a list of their corresponding labels
+#         # a (frequency) dictionary with number of each label
+#         self.img_list, self.label_list, self.freq_dict = d.import_image_files(path_of_images)
+#
+#         # the number of classes for classification
+#         # a dictionary with the numerical value of each class
+#         self.num_classes, self.labels_keys = d.get_class_number_and_key_dict(self.freq_dict, threshold=40)
+#
+#         # lists of train dataset and test dataset images path
+#         # the corresponding lists of labels for the train and test datasets
+#         self.train_x_list, self.train_y_list, self.test_x_list, self.test_y_list = d.set_train_n_test(self.img_list,
+#                                                                                                       self.label_list,
+#                                                                                                       self.freq_dict,
+#                                                                                                       self.labels_keys,
+#                                                                                                       test_size=10)
 
 
 def get_width():
-    biggest_mat = get_t_frames()*get_n_mels()
-    inches = biggest_mat/DPI
-    width_in_inch = inches/HEIGHT_RATIO
-    IMAGE_WIDTH = width_in_inch*DPI
-    return width_in_inch
+    return IMAGE_WIDTH
 
 
 def get_height():
-    biggest_mat = get_t_frames()*get_n_mels()
-    inches = biggest_mat/DPI
-    height_in_inch = inches/WIDTH_RATIO
-    IMAGE_HEIGHT = height_in_inch*DPI
-    return height_in_inch
+    return IMAGE_HEIGHT
 
 
-def get_train_size():
-    return TRAIN_SIZE
+def set_width(new_width):
+    IMAGE_WIDTH = new_width
 
 
-def get_test_size():
-    return TEST_SIZE
-
-
-def get_classes():
-    return N_CLASS
+def set_height(new_height):
+    IMAGE_HEIGHT = new_height
 
 
 def mp3_to_mfcc(file):
@@ -97,17 +141,17 @@ def mp3_to_mfcc(file):
     """
     y, sr = librosa.load(file, mono=False)
     mfccs = librosa.feature.mfcc(y=y, sr=sr)
-    temp_n_mels, temp_t_frames = mfccs.shape
 
-    if temp_n_mels > get_n_mels():
-        # set_n_mels(temp_n_mels)
-        N_MELS = temp_n_mels
+    # temp_n_mels, temp_t_frames = mfccs.shape
 
-    if temp_t_frames > get_t_frames():
-        set_t_frames(temp_t_frames)
+    # if temp_n_mels > get_n_mels():
+    #     # set_n_mels(temp_n_mels)
+    #     N_MELS = temp_n_mels
+    #
+    # if temp_t_frames > get_t_frames():
+    #     set_t_frames(temp_t_frames)
 
     return mfccs
-    # return mfccs[0]
 
 
 def mp3_to_spectrogram(file):
@@ -127,14 +171,13 @@ def mp3_to_spectrogram(file):
     mspec = librosa.feature.melspectrogram(y=y, sr=sr)
     temp_n_mels, temp_t_frames = mspec.shape
 
-    if temp_n_mels > get_n_mels():
-        set_n_mels(temp_n_mels)
-
-    if temp_t_frames > get_t_frames():
-        set_t_frames(temp_t_frames)
+    # if temp_n_mels > get_n_mels():
+    #     set_n_mels(temp_n_mels)
+    #
+    # if temp_t_frames > get_t_frames():
+    #     set_t_frames(temp_t_frames)
 
     return mspec
-    # return mspec[0]
 
 
 def featured_data_to_image(data, width, height, out_filename, mfcc):
@@ -147,9 +190,7 @@ def featured_data_to_image(data, width, height, out_filename, mfcc):
     :param out_filename: filename to be saved
     :return: path to jpg file
     """
-    # width = get_width()
-    # height = get_height()
-    # plt.use
+
     plt.figure(figsize=(width, height), frameon=False) # 5(in) x 3(in) = 480(px) x 288(px)
 
     plt.rcParams['savefig.pad_inches'] = 0
@@ -165,7 +206,6 @@ def featured_data_to_image(data, width, height, out_filename, mfcc):
     print("saved image to: ", out_filename)
     plt.clf()
     plt.close()
-    # plt.savefig(out_folder + out_filename)
 
 
 def mp3_to_jpg(filename, mfcc=True, width=480, height = 288, width_inch=5, height_inch=3, dpi=96, out_folder="jpg"):
@@ -180,7 +220,6 @@ def mp3_to_jpg(filename, mfcc=True, width=480, height = 288, width_inch=5, heigh
     out_path = out_path + "/" + fn_split[-1][:-4]
     out_path = out_path + ".jpg"
     featured_data_to_image(arr, width_inch, height_inch, out_path, mfcc)
-
 
 
 def import_image_files(path):
@@ -218,7 +257,7 @@ def import_image_files(path):
     return image_list, label_list, frequ_dict
 
 
-def get_class_number_and_key_dict(freq_dict, threshold = 50):
+def get_class_number_and_key_dict(freq_dict, threshold=40):
     """
     calculates the amount of classification classes based on a minimum threshold of samples per class
     and creates a dictionary with key,value corresponds to label,index
@@ -236,7 +275,7 @@ def get_class_number_and_key_dict(freq_dict, threshold = 50):
             labels_key[label] = key_index
             key_index = key_index + 1
 
-    N_CLASS = result
+    # N_CLASS = result
     print("Keys and Values are:")
 
     for k, v in labels_key.items():
@@ -245,7 +284,7 @@ def get_class_number_and_key_dict(freq_dict, threshold = 50):
     return result, labels_key
 
 
-def set_train_n_test(image_list, label_list, freq_dict, key_dict, test_size = 10 ):
+def set_train_n_test(image_list, label_list, freq_dict, key_dict, test_size=10):
     """
     creates a train and test datasets
     only labels in key dictionary (key_dict) gets into the dataset
@@ -281,8 +320,8 @@ def set_train_n_test(image_list, label_list, freq_dict, key_dict, test_size = 10
                 train_images.append(image_list[_])
                 train_labels.append(label)
 
-    TEST_SIZE = len(test_labels)
-    TRAIN_SIZE = len(train_labels)
+    # TEST_SIZE = len(test_labels)
+    # TRAIN_SIZE = len(train_labels)
 
     return train_images, train_labels, test_images, test_labels
 
@@ -303,6 +342,23 @@ def parse_image(filename, label):
     return label, image_resized
 
 
+def load_image(path_to_image):
+    decoded_img = cv2.imread(path_to_image)
+    return decoded_img
+
+
+# def resize_image(decoded_img):
+#     decoded_img.set_shape([None, None, None])
+#     resized_img = tf.image.resize_images(decoded_img, [IMAGE_WIDTH, IMAGE_HEIGHT])
+#     return resized_img
+
+
+def reshape_decoded_image(decoded_image):
+    return np.reshape(decoded_image, IMAGE_WIDTH*IMAGE_HEIGHT*CHANNELS)
+
+# def reshape_decoded_image(decoded_image):
+#     return tf.reshape(decoded_image, IMAGE_WIDTH*IMAGE_HEIGHT*CHANNELS)
+
 # def create_tf_dataset(filenames_list, labels_list):
 #     """
 #
@@ -316,13 +372,3 @@ def parse_image(filename, label):
 #     dataset = dataset.map(parse_image)
 #
 #     return dataset
-
-
-# def main():
-#     IMAGE_WIDTH = 800
-#     IMAGE_HEIGHT = 600
-#     N_CLASS = 0
-#     TRAIN_SIZE = 0
-#     TEST_SIZE = 0
-#     N_MELS = 0
-#     T_FRAMES = 0
