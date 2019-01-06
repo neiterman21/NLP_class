@@ -11,22 +11,29 @@ from Datakeeper import *
 from tensorflow.contrib.boosted_trees.lib.learner import batch
 from termcolor import colored
 
-# tf.set_random_seed(2)
-# np.random.seed(2)
+"""
+Multilayer Perceptron model
+containing 2 hidden layers
+
+First layer with 128 neurons 
+Second layer with 64 neurons
+ReLu activation layer 
+AdamOptimizer for optimization
+Final layer is SoftMax
+"""
+
 
 (hidden1_size, hidden2_size, hidden3_size) = (128, 64, 32)
 # Store layers weight & bias
 weights = {
     'h1': tf.Variable(tf.truncated_normal([IMG_HEIGHT * IMG_WIDTH * 3, hidden1_size], stddev=0.1)),
     'h2': tf.Variable(tf.truncated_normal([hidden1_size, hidden2_size], stddev=0.1)),
-    #  'h3': tf.Variable(tf.random_normal([hidden2_size, hidden3_size])),
     'out': tf.Variable(tf.truncated_normal([hidden2_size, 6], stddev=0.1))
 }
 
 biases = {
     'b1': tf.Variable(tf.constant(0.1, shape=[hidden1_size])),
     'b2': tf.Variable(tf.constant(0.1, shape=[hidden2_size])),
-    # 'b3': tf.Variable(tf.random_normal([hidden3_size])),
     'out': tf.Variable(tf.constant(0.1, shape=[6]))
 }
 

@@ -22,13 +22,22 @@ num_steps = 2000
 batch_size = 32
 
 # Network Parameters
-num_input = IMG_HEIGHT * IMG_WIDTH * 3
-num_classes = 6
-dropout = 0.25  # Dropout, probability to drop a unit
+num_input = IMG_HEIGHT * IMG_WIDTH * 3  # number of features
+num_classes = 6     # amount of classification classes
+dropout = 0.25      # Dropout, probability to drop a unit
 
 
 # Create the neural network
 def conv_net(x_dict, n_classes, dropout, reuse, is_training):
+    """
+    this function creates a convolution network
+    :param x_dict: a dictionary containing images data and labels in Datakeeper object
+    :param n_classes: amount of classification classes
+    :param dropout: probability to drop a unit
+    :param reuse: for variable scope
+    :param is_training: True/False to distinct training from test set
+    :return: the output layer of the network
+    """
     # Define a scope for reusing the variables
     with tf.variable_scope('ConvNet', reuse=reuse):
         # TF Estimator input is a dict, in case of multiple inputs
@@ -64,9 +73,15 @@ def conv_net(x_dict, n_classes, dropout, reuse, is_training):
 
 # Define the model function (following TF Estimator Template)
 def model_fn(features, labels, mode):
-    # Build the neural network
-    # Because Dropout have different behavior at training and prediction time, we
-    # need to create 2 distinct computation graphs that still share the same weights.
+    """
+    Build the neural network
+    Because Dropout have different behavior at training and prediction time, we
+    need to create 2 distinct computation graphs that still share the same weights.
+    :param features: dataset features (image)
+    :param labels: far validating
+    :param mode: for returning predictions
+    :return: tf estimator
+    """
     logits_train = conv_net(features, num_classes, dropout, reuse=False,
                             is_training=True)
     logits_test = conv_net(features, num_classes, dropout, reuse=True,
@@ -103,6 +118,10 @@ def model_fn(features, labels, mode):
 
 
 def get_data():
+    """
+    creates a dataset
+    :return: a dictionary with Datakeeper test and train sets
+    """
     image_list, label_list, label_names, numeric_labels = rd.get_image_and_label()
 
     data_image_train, data_image_test, data_label_train, data_label_test = train_test_split(image_list, numeric_labels,

@@ -9,11 +9,6 @@ import cv2
 import matplotlib.pyplot as plt
 from Datakeeper import *
 
-"""
-Multilayer Perceptron model
-
-"""
-
 
 def main():
     # Parameters
